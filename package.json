@@ -1,0 +1,27 @@
+{
+  "name": "redstoneio",
+  "version": "1.0.0",
+  "description": "redstone editor",
+  "main": "index.js",
+  "scripts": {
+    "build": "node esbuild.config.js"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/lokucrazy/redstoneio.git"
+  },
+  "author": "Ryan Lokugamage",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/lokucrazy/redstoneio/issues"
+  },
+  "homepage": "https://github.com/lokucrazy/redstoneio#readme",
+  "dependencies": {
+    "jss": "^10.1.1",
+    "jss-preset-default": "^10.1.1",
+    "typescript": "^3.8.3"
+  },
+  "devDependencies": {
+    "esbuild": "^0.2.10"
+  }
+}
