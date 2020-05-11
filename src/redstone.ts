@@ -4,9 +4,11 @@ type RedstoneShape = 0 | 1 | 2 | 3
 class Redstone {
   ctx: CanvasRenderingContext2D | null
   signal: SignalStrength
+  shape: RedstoneShape
   constructor(ctx: CanvasRenderingContext2D | null) {
     this.ctx = ctx
     this.signal = 0
+    this.shape = 0
   }
 
   draw(x: number, y: number, shape: RedstoneShape) {
@@ -24,12 +26,17 @@ class Redstone {
         this.ctx?.fillRect(x, y, 4, 18)
         break
       case 3:
-        this.ctx?.fillRect(x, y+8, 18, 4)
-        this.ctx?.fillRect(x+8, y, 4, 18)
+        this.ctx?.fillRect(x, y+8, 19, 4)
+        this.ctx?.fillRect(x+8, y, 4, 19)
         break
     }
     this.ctx?.closePath()
+    this.shape = shape
   }
 }
 
 export default Redstone
+export type {
+  SignalStrength,
+  RedstoneShape
+}

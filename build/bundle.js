@@ -35,6 +35,7 @@
         constructor(ctx) {
           this.ctx = ctx;
           this.signal = 0;
+          this.shape = 0;
         }
         draw(x, y, shape) {
           var _a, _b, _c, _d, _e, _f, _g, _h;
@@ -53,18 +54,20 @@
               (_e = this.ctx) == null ? void 0 : _e.fillRect(x, y, 4, 18);
               break;
             case 3:
-              (_f = this.ctx) == null ? void 0 : _f.fillRect(x, y + 8, 18, 4);
-              (_g = this.ctx) == null ? void 0 : _g.fillRect(x + 8, y, 4, 18);
+              (_f = this.ctx) == null ? void 0 : _f.fillRect(x, y + 8, 19, 4);
+              (_g = this.ctx) == null ? void 0 : _g.fillRect(x + 8, y, 4, 19);
               break;
           }
           (_h = this.ctx) == null ? void 0 : _h.closePath();
+          this.shape = shape;
         }
       }
       const default2 = Redstone;
 
       // src\blocks.ts
       class Block {
-        constructor(ctx, x, y) {
+        constructor(ctx, x, y, id) {
+          this.id = id;
           this.x = x;
           this.x1 = x + 20;
           this.y = y;
@@ -73,7 +76,6 @@
           this.redstone = null;
           this.neighborsX = new Array(2);
           this.neighborsY = new Array(2);
-          this.shape = "none";
         }
         onHit(mouseX, mouseY) {
           if (mouseX < this.x1 && mouseX > this.x && (mouseY < this.y1 && mouseY > this.y)) {
@@ -93,19 +95,17 @@
           }
         }
         update() {
-          console.log("updating...");
           if (this.redstone != null)
             this.applyRedstone();
         }
         applyRedstone() {
           this.redstone = new default2(this.ctx);
           let newShape = this.checkNeighbors();
-          if (newShape != this.shape) {
-            console.log("new shape, updating neighbors...");
+          if (newShape != this.redstone.shape) {
             this.addShape(newShape);
             this.updateNeighbors();
           } else {
-            this.addShape(this.shape);
+            this.addShape(this.redstone.shape);
           }
         }
         removeRedstone() {
@@ -114,26 +114,27 @@
           this.updateNeighbors();
         }
         addShape(shape) {
-          var _a, _b, _c, _d;
+          var _a;
+          let drawX = this.x;
+          let drawY = this.y;
           switch (shape) {
-            case "none":
-              this.clearShape();
-              (_a = this.redstone) == null ? void 0 : _a.draw(this.x + 10, this.y + 10, 0);
+            case 0:
+              drawX += 10;
+              drawY += 10;
               break;
-            case "x":
-              this.clearShape();
-              (_b = this.redstone) == null ? void 0 : _b.draw(this.x + 1, this.y + 8, 1);
+            case 1:
+              drawX += 1;
+              drawY += 8;
               break;
-            case "y":
-              this.clearShape();
-              (_c = this.redstone) == null ? void 0 : _c.draw(this.x + 8, this.y + 1, 2);
+            case 2:
+              drawX += 8;
+              drawY += 1;
               break;
-            case "xy":
-              this.clearShape();
-              (_d = this.redstone) == null ? void 0 : _d.draw(this.x, this.y, 3);
+            case 3:
               break;
           }
-          this.shape = shape;
+          this.clearShape();
+          (_a = this.redstone) == null ? void 0 : _a.draw(drawX, drawY, shape);
         }
         clearShape() {
           var _a, _b, _c;
@@ -143,17 +144,16 @@
         }
         checkNeighbors() {
           var _a, _b, _c, _d;
-          let val = "";
+          let val = 0;
           if (((_a = this.neighborsX[0]) == null ? void 0 : _a.redstone) || ((_b = this.neighborsX[1]) == null ? void 0 : _b.redstone)) {
-            val += "x";
+            val += 1;
           }
           if (((_c = this.neighborsY[0]) == null ? void 0 : _c.redstone) || ((_d = this.neighborsY[1]) == null ? void 0 : _d.redstone)) {
-            val += "y";
+            val += 2;
           }
-          return val || "none";
+          return val;
         }
         updateNeighbors() {
-          console.log("updating neighbors", this.neighborsX, this.neighborsY);
           this.neighborsX.forEach((neighbor) => neighbor.update());
           this.neighborsY.forEach((neighbor) => neighbor.update());
         }
@@ -186,7 +186,7 @@
           for (let x = 0; x < 25; x++) {
             this.blocks[x] = new Array(25);
             for (let y = 0; y < 25; y++) {
-              this.blocks[x][y] = new default3(ctx, x * 20, y * 20);
+              this.blocks[x][y] = new default3(ctx, x * 20, y * 20, y + x * 25);
               this.blocks[x][y].draw();
             }
           }
@@ -197,13 +197,15 @@
             blockColumn.forEach((block, y) => {
               if (x != 0) {
                 block.neighborsX.push(this.blocks[x - 1][y]);
-              } else if (x != this.blocks.length - 1) {
+              }
+              if (x != this.blocks.length - 1) {
                 block.neighborsX.push(this.blocks[x + 1][y]);
               }
               block.neighborsX = block.neighborsX.filter(Boolean);
               if (y != 0) {
                 block.neighborsY.push(blockColumn[y - 1]);
-              } else if (y != blockColumn.length - 1) {
+              }
+              if (y != blockColumn.length - 1) {
                 block.neighborsY.push(blockColumn[y + 1]);
               }
               block.neighborsY = block.neighborsY.filter(Boolean);
@@ -213,14 +215,10 @@
         onClick(event) {
           let mouseX = event.clientX - this.gridX;
           let mouseY = event.clientY - this.gridY;
-          console.log({
-            mouseX,
-            mouseY
-          });
-          this.blocks.forEach((blockColumn, i) => {
-            blockColumn.forEach((block, index) => {
+          this.blocks.forEach((blockColumn) => {
+            blockColumn.forEach((block) => {
               if (block.onHit(mouseX, mouseY)) {
-                console.log(`hit block ${index + i * 25}`);
+                console.log(`hit block ${block.id}`);
                 block.onClick();
               }
             });

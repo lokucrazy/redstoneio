@@ -1,6 +1,8 @@
 import Redstone from "./redstone"
+import type { RedstoneShape } from "./redstone"
 
 class Block {
+  id: number
   x: number
   x1: number
   y: number
@@ -9,8 +11,8 @@ class Block {
   redstone: Redstone | null
   neighborsX: Array<Block>
   neighborsY: Array<Block>
-  shape: string
-  constructor(ctx: CanvasRenderingContext2D | null ,x: number, y: number) {
+  constructor(ctx: CanvasRenderingContext2D | null , x: number, y: number, id: number) {
+    this.id = id
     this.x = x
     this.x1 = x + 20
     this.y = y
@@ -19,7 +21,6 @@ class Block {
     this.redstone = null
     this.neighborsX = new Array<Block>(2)
     this.neighborsY = new Array<Block>(2)
-    this.shape = 'none'
   }
 
   onHit(mouseX: number, mouseY: number) {
@@ -42,19 +43,17 @@ class Block {
   }
 
   update() {
-    console.log('updating...')
     if (this.redstone != null) this.applyRedstone()
   }
 
   private applyRedstone() {
     this.redstone = new Redstone(this.ctx)
     let newShape = this.checkNeighbors()
-    if (newShape != this.shape) {
-      console.log('new shape, updating neighbors...')
+    if (newShape != this.redstone.shape) {
       this.addShape(newShape)
       this.updateNeighbors()
     } else {
-      this.addShape(this.shape)
+      this.addShape(this.redstone.shape)
     }
   }
 
@@ -64,26 +63,27 @@ class Block {
     this.updateNeighbors()
   }
 
-  private addShape(shape: string) {
+  private addShape(shape: RedstoneShape) {
+    let drawX = this.x
+    let drawY = this.y
     switch(shape) {
-      case 'none':
-        this.clearShape()
-        this.redstone?.draw(this.x + 10, this.y + 10, 0)
+      case 0:
+        drawX += 10
+        drawY += 10
         break
-      case 'x':
-        this.clearShape()
-        this.redstone?.draw(this.x + 1, this.y + 8, 1)
+      case 1:
+        drawX += 1
+        drawY += 8
         break
-      case 'y':
-        this.clearShape()
-        this.redstone?.draw(this.x + 8, this.y + 1, 2)
+      case 2:
+        drawX += 8
+        drawY += 1
         break
-      case 'xy':
-        this.clearShape()
-        this.redstone?.draw(this.x, this.y, 3)
+      case 3:
         break
     }
-    this.shape = shape
+    this.clearShape()
+    this.redstone?.draw(drawX, drawY, shape)
   }
 
   private clearShape() {
@@ -92,19 +92,18 @@ class Block {
     this.ctx?.closePath()
   }
 
-  private checkNeighbors(): string {
-    let val = ''
+  private checkNeighbors(): RedstoneShape {
+    let val = 0
     if (this.neighborsX[0]?.redstone || this.neighborsX[1]?.redstone) {
-      val += 'x'
+      val += 1
     }
     if (this.neighborsY[0]?.redstone || this.neighborsY[1]?.redstone) {
-      val += 'y'
+      val += 2
     }
-    return val || 'none'
+    return val as RedstoneShape
   }
 
   private updateNeighbors() {
-    console.log('updating neighbors', this.neighborsX, this.neighborsY)
     this.neighborsX.forEach(neighbor => neighbor.update())
     this.neighborsY.forEach(neighbor => neighbor.update())
   }

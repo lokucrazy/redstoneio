@@ -31,7 +31,7 @@ class RedstoneIO extends HTMLDivElement {
     for (let x = 0; x < 25; x++) {
       this.blocks[x] = new Array<Block>(25)
       for (let y = 0; y < 25; y++) {
-        this.blocks[x][y] = new Block(ctx, x*20, y*20)
+        this.blocks[x][y] = new Block(ctx, x*20, y*20, (y + x*25))
         this.blocks[x][y].draw()
       }
     }
@@ -43,18 +43,19 @@ class RedstoneIO extends HTMLDivElement {
       blockColumn.forEach((block, y) => {
         if (x != 0) {
           block.neighborsX.push(this.blocks[x-1][y])
-        } else if (x != this.blocks.length - 1) {
+        }
+        if (x != this.blocks.length - 1) {
           block.neighborsX.push(this.blocks[x+1][y])
         }
         block.neighborsX = block.neighborsX.filter(Boolean)
 
         if (y != 0) {
           block.neighborsY.push(blockColumn[y-1])
-        } else if (y != blockColumn.length - 1) {
+        }
+        if (y != blockColumn.length - 1) {
           block.neighborsY.push(blockColumn[y+1])
         }
         block.neighborsY = block.neighborsY.filter(Boolean)
-
       })
     })
   }
@@ -62,11 +63,10 @@ class RedstoneIO extends HTMLDivElement {
   onClick(event: MouseEvent) {
     let mouseX = event.clientX - this.gridX
     let mouseY = event.clientY - this.gridY
-    console.log({mouseX, mouseY})
-    this.blocks.forEach((blockColumn, i) => {
-      blockColumn.forEach((block, index) => {
+    this.blocks.forEach((blockColumn) => {
+      blockColumn.forEach((block) => {
         if (block.onHit(mouseX, mouseY)) {
-          console.log(`hit block ${index + (i*25)}`)
+          console.log(`hit block ${block.id}`)
           block.onClick()
         }
       })
